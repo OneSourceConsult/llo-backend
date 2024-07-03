@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{name}}-ingress
+  namespace: {{namespace}}
+  annotations:
+    {% if secretName %}
+    nginx.org/redirect-to-https: 'true'
+    nginx.org/ssl-services: {{ serviceName }}
+    {% endif %}
+  labels:
+    cp: {{ exp.name.lower() }}
+spec:
+  ingressClassName: nginx
+  rules:
+  {% if exp.protocol == 'HTTP' %}
+    - host: {{ url }}
+      http:
+        paths:
+        
+        
+          - backend:
+              service:
+                name: {{ serviceName }}
+                port:
+                  number: {{ exp.clusterPort }}
+            path: /
+            pathType: ImplementationSpecific 
+  {% endif %}
+  {% if secretName %}
+  tls:
+    - hosts:
+        - {{ url }}
+      secretName: {{ secretName }}
+  {% endif %}

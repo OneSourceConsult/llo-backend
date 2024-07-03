@@ -1,0 +1,331 @@
+description: Online gaming platform
+imports:
+- charity_custom_types_v13.yaml
+metadata:
+  template_author: barone
+  template_name: XRImmersiveGame
+  template_version: 0.0.3
+topology_template:
+  node_templates:
+    GC_in:
+      properties:
+        name: GC_in
+        port: 21765
+        protocol: UDP
+      requirements:
+      - binding:
+          node: GameClient
+      - link:
+          node: VL_2
+      type: Charity.ConnectionPoint
+    GC_out:
+      properties:
+        name: GC_out
+        protocol: UDP
+      requirements:
+      - binding:
+          node: GameClient
+      - link:
+          node: VL_1
+      type: Charity.ConnectionPoint
+    GS:
+      properties:
+        name: GS
+        port: 80
+        protocol: TCP
+      requirements:
+      - binding:
+          node: MeshMerger
+      - link:
+          node: VL_3
+      type: Charity.ConnectionPoint
+    GS_in:
+      properties:
+        name: GS_in
+        port: 21765
+        protocol: UDP
+      requirements:
+      - binding:
+          node: GameServer
+      - link:
+          node: VL_1
+      type: Charity.ConnectionPoint
+    GS_out:
+      properties:
+        name: GS_out
+        protocol: UDP
+      requirements:
+      - binding:
+          node: GameServer
+      - link:
+          node: VL_2
+      type: Charity.ConnectionPoint
+    GameClient:
+      properties:
+        deployment_unit: EXTERNAL
+        geolocation:
+          exact: false
+          latitude: '79'
+          longitude: '8.16'
+        name: gameclient
+      type: Charity.Component
+    GameServer:
+      properties:
+        deployment_unit: K8S_POD
+        geolocation:
+          exact: false
+          latitude: '79'
+          longitude: '8.16'
+        image: harbor.hpe.charity-project.eu/hpe/charity-ms-vnfimage:dev-k8s
+        name: GameServer
+        placement_hint: EDGE
+      requirements:
+      - host: GameServerNode
+      type: Charity.Component
+    GameServerNode:
+      attributes:
+        instance_id: to_be_filled_in
+      node_filter:
+        capabilities:
+        - host:
+            properties:
+              mem_size:
+              - greater_than: 8 MB
+              num_cpus:
+              - equal: 1
+        - deployment:
+            properties:
+              cluster:
+              - equal: azure_zurich_cluster2
+              datacenter:
+              - equal: azure_zurich
+      type: Charity.Node
+    MM:
+      properties:
+        name: MM
+        protocol: TCP
+      requirements:
+      - binding:
+          node: GameServer
+      - link:
+          node: VL_3
+      type: Charity.ConnectionPoint
+    MeshMerger:
+      properties:
+        deployment_unit: K8S_POD
+        environment:
+          myEnvParam: myValue
+          name: defaultName
+        geolocation:
+          city: ''
+          country: Italy
+          exact: false
+          region: Europe
+        image: harbor.hpe.charity-project.eu/hpe/charity-ms-vnfimage:prod-k8s
+        name: MeshMerger
+        placement_hint: EDGE
+      requirements:
+      - host: MeshMergerNode
+      type: Charity.Component
+    MeshMergerNode:
+      attributes:
+        instance_id: to_be_filled_in
+      node_filter:
+        capabilities:
+        - host:
+            properties:
+              mem_size:
+              - greater_than: 8 MB
+              num_cpus:
+              - equal: 1
+        - deployment:
+            properties:
+              cluster:
+              - equal: cloudsigma_geneva_cluster3
+              datacenter:
+              - equal: cloudsigma_geneva
+      type: Charity.Node
+    VL_1:
+      node_filter:
+        capabilities:
+        - network:
+            properties:
+              bandwidth:
+              - greater_or_equal: 399 Mbps
+              jitter:
+              - less_than: 100 ms
+              latency:
+              - less_than: 148 ms
+      properties:
+        name: VL_1
+      type: Charity.VirtualLink
+    VL_2:
+      node_filter:
+        capabilities:
+        - network:
+            properties:
+              bandwidth:
+              - greater_or_equal: 698 Mbps
+              jitter:
+              - less_than: 100 ms
+              latency:
+              - less_than: 395 ms
+      properties:
+        name: VL_2
+      type: Charity.VirtualLink
+    VL_3:
+      node_filter:
+        capabilities:
+        - network:
+            properties:
+              bandwidth:
+              - greater_or_equal: 399 Mbps
+              jitter:
+              - less_than: 100 ms
+              latency:
+              - less_than: 183 ms
+      properties:
+        name: VL_3
+      type: Charity.VirtualLink
+  outputs:
+    GC_in_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - GC_in
+        - url
+    GC_out_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - GC_out
+        - url
+    GS_in_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - GS_in
+        - url
+    GS_out_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - GS_out
+        - url
+    GS_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - GS
+        - url
+    GameServer_IP:
+      description: The private IP address of the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - GameServer
+        - ip
+    GameServer_cluster:
+      description: The name of the Cluster hosting the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - GameServerNode
+        - deployment.cluster
+    GameServer_datacenter:
+      description: The name of the Datacenter  hosting the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - GameServerNode
+        - deployment.datacenter
+    GameServer_deployment_context:
+      description: The deployment context for accessing the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - GameServer
+        - deployment_context
+    GameServer_latitude:
+      description: The latitude of the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - GameServerNode
+        - latitude
+    GameServer_longitude:
+      description: The longitude of the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - GameServerNode
+        - longitude
+    GameServer_namespace:
+      description: The deployment namespace of the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - GameServer
+        - namespace
+    MM_url:
+      description: The url for this connection point
+      type: string
+      value:
+        get_attribute:
+        - MM
+        - url
+    MeshMerger_IP:
+      description: The private IP address of the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - MeshMerger
+        - ip
+    MeshMerger_cluster:
+      description: The name of the Cluster hosting the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - MeshMergerNode
+        - deployment.cluster
+    MeshMerger_datacenter:
+      description: The name of the Datacenter  hosting the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - MeshMergerNode
+        - deployment.datacenter
+    MeshMerger_deployment_context:
+      description: The deployment context for accessing the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - MeshMerger
+        - deployment_context
+    MeshMerger_latitude:
+      description: The latitude of the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - MeshMergerNode
+        - latitude
+    MeshMerger_longitude:
+      description: The longitude of the VNF node.
+      type: string
+      value:
+        get_attribute:
+        - MeshMergerNode
+        - longitude
+    MeshMerger_namespace:
+      description: The deployment namespace of the provisioned VNF.
+      type: string
+      value:
+        get_attribute:
+        - MeshMerger
+        - namespace
+tosca_definitions_version: tosca_simple_yaml_1_3

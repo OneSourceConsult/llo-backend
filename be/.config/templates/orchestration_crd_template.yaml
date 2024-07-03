@@ -1,0 +1,29 @@
+apps:
+    - name: {{ appName }}
+      owner: {{ owner }}
+      cluster: {{ default_cluster}}
+      {% for component in components %}
+      components:
+        - name: {{ component.name }}
+          cluster-selector: {{ component.default_cluster }}
+          image: {{ component.image }}
+          
+          {% for exp in component.expose %}
+          expose:
+          - is-public: true
+            is-peered: true
+            containerPort: {{ exp.containerPort}}
+            clusterPort: {{ exp.containerPort }}
+          {% endfor %}
+
+          {% for env in component.environment_variables%}
+          env:
+            is-secret: false
+            variables:
+              - name: {{ env.name}}
+                value: {{ env.value}}
+          {% endfor %}
+          tls:
+            name: {{ component.tls_name }}
+      {% endfor %}
+        

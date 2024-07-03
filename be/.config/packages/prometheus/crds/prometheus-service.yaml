@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: 
+  namespace: monitoring
+  annotations:
+    metallb.universe.tf/address-pool: public-pool
+    metallb.universe.tf/allow-shared-ip: liqo-shared
+spec:
+  selector: 
+    app: prometheus-server
+  type: LoadBalancer
+  ports:
+    - port: 9090
+      targetPort: 9090

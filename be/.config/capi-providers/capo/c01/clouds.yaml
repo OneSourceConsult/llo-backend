@@ -1,0 +1,13 @@
+clouds:
+  openstack:
+    auth:
+      auth_url: https://<IP>:<PORT>/v3/
+      username: "admin"
+      password: "<PASSWORD>"
+      project_id: <ID>
+      project_name: "admin"
+      user_domain_name: "Default"
+    region_name: "microstack"
+    interface: "public"
+    identity_api_version: 3
+    cacert: "/app/.config/capi-providers/capo/c01/cacert.pem"

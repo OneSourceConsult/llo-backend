@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orch-backend
+  namespace: orchestration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orch-backend
+  template:
+    metadata:
+      labels:
+        app: orch-backend
+    spec:
+      serviceAccountName: orch-account
+      containers:
+      - name: orch-backend
+        image: repository.charity-project.eu/one/clusterapi-with-openstack-provider/orch-backend
+        imagePullPolicy: Always
+        env:
+        - name: FLASK_APP
+          value: app
+        - name: APP_LOG_LEVEL
+          value: INFO
+        - name: APP_API_VERSION
+          value: /v1
+        - name: CAPI_KUBECONFIG
+          value: /app/.config/capi/kubeconfig
+        - name: CAPI_HOSTNAME
+          value: 31.171.250.32
+        - name: CAPI_SSH_USER
+          value: root
+        - name: CAPI_SSH_KEY
+          value: /app/capi/.ssh/capi_id_rsa
+        - name: GITHUB_TOKEN
+          value: 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
+        - name: CAPO_PROVIDERS_REQUIRES_FILES
+          value: kubeadm-openstack.env,k3s-openstack.env,generate_cluster_kubeadm.sh,generate_cluster_k3s.sh,env.rc
+        - name: CAPI_PROVIDERS_PATH
+          value: /app/.config/capi-providers/
+        - name: APP_PACKAGES_PATH
+          value: /app/.config/packages/
+        - name: APP_TEMPLATES_PATH
+          value: /app/.config/templates/
+      imagePullSecrets:
+      - name: clusterapi-registry-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orch-backend
+  namespace: orchestration
+  labels:
+    app: orch-backend
+    service: orch-backend
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000
+  selector:
+    app: orch-backend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.org.kubernetes.io/enable-cors: "true"
+    
+  name: ingress-orch-orch-backend
+  namespace: orchestration
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: orch-backend.orchestration.charity-project.eu
+      http:
+        paths:
+          - backend:
+              service:
+                name: orch-backend
+                port:
+                  number: 80
+            path: /
+            pathType: ImplementationSpecific
